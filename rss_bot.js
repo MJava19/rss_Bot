@@ -3,23 +3,21 @@ const app = new exspress();
 let schedule = require('node-schedule');
 const RssParser = require('feedparser');
 const fetch = require('node-fetch');
-const req = fetch('https://news.ycombinator.com/rss');
 const port = 3080;
 const TelegramBot = require('node-telegram-bot-api');
-const url = 'https://98809c2b5f63.ngrok.io';
+const url = 'https://836b5b726c61.ngrok.io';
 const TOKEN = '828929063:AAG3PrnDkzXqQVqK6CCSp9jEUuFQ6e8pCXI';
 const bot = new TelegramBot(TOKEN);
 
 bot.setWebHook(`${url}/bot`);
 app.use(exspress.json());
 app.use(exspress.urlencoded({extended: true}));
-let feedparser = new RssParser();
-
+let news_link = new Set();
 
     app.post(`/bot`, function (request, resp) {
-
-        schedule.scheduleJob('*/1 * * * *', function () {
-            console.log('1 minute');
+        schedule.scheduleJob('*/5 * * * *', function () {
+            let req = fetch('https://news.ycombinator.com/rss');
+            let feedparser = new RssParser();
         req.then(function (res) {
             if (res.status !== 200) {
                 throw new Error('Bad status code');
@@ -36,7 +34,12 @@ let feedparser = new RssParser();
             let stream = this;
             let item;
             item = stream.read();
-            bot.sendMessage(request.body.message.from.id, item.link);
+            if (news_link.has(item.link)) {
+
+            } else {
+                news_link.add(item.link);
+                bot.sendMessage(request.body.message.from.id, item.link);
+            }
         });
     });
 });
